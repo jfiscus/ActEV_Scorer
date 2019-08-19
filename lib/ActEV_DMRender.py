@@ -274,13 +274,25 @@ def evaluate_input(args):
         try:
             input_list = literal_eval(args.input)
             for dm_data, dm_opts in input_list:
-                dm_file_path = dm_data['path']
-                dm_obj = call_loader(dm_file_path, logger)
-                dm_obj.path = dm_file_path
-                dm_obj.label = dm_data['label'] if dm_data['label'] is not None else dm_obj.label
-                dm_obj.show_label = dm_data['show_label']
-                dm_obj.line_options = dm_opts
-                DM_list.append(dm_obj)
+                if (dm_data['path'] != "AGGREGATE"):
+                    dm_file_path = dm_data['path']
+                    dm_obj = call_loader(dm_file_path, logger)
+                    dm_obj.path = dm_file_path
+                    dm_obj.label = dm_data['label'] if dm_data['label'] is not None else dm_obj.label
+                    dm_obj.show_label = dm_data['show_label']
+                    dm_obj.line_options = dm_opts
+                    DM_list.append(dm_obj)
+            for dm_data, dm_opts in input_list:
+                if (dm_data['path'] == "AGGREGATE"):
+                    logger.debug("Aggregating to the all DMs")
+                    dm_file_path = dm_data['path']
+                    dm_obj = DataContainer.aggregate(DM_list, output_label="TFA_mean_byfa", average_resolution=500)
+                    dm_obj.activity = "AGGREGATED"
+                    dm_obj.mode = "TFA"
+                    dm_obj.label = dm_data['label'] if dm_data['label'] is not None else dm_obj.label
+                    dm_obj.show_label = dm_data['show_label']
+                    dm_obj.line_options = dm_opts
+                    DM_list.append(dm_obj)
 
         except ValueError as e:
             if not all([len(x) == 2 for x in input_list]):
